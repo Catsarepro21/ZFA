@@ -60,34 +60,54 @@ class MainApplication(ttk.Frame):
 
     def create_widgets(self):
         # Create main containers
-        left_frame = ttk.Frame(self)
-        right_frame = ttk.Frame(self)
+        left_frame = ttk.Frame(self, relief="solid", borderwidth=1)
+        right_frame = ttk.Frame(self, relief="solid", borderwidth=1)
 
         left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
         right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
         # Left frame contents - People List
-        ttk.Label(left_frame, text="People List").pack(anchor="w")
+        list_label = ttk.Label(left_frame, text="People List", font=('Arial', 12, 'bold'))
+        list_label.pack(anchor="w", pady=(0, 5))
 
-        # People listbox
-        self.people_listbox = tk.Listbox(left_frame, height=15)
-        self.people_listbox.pack(fill="both", expand=True)
-        self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
-
-        # Add new person section
+        # Add new person section at the top
         add_frame = ttk.Frame(left_frame)
-        add_frame.pack(fill="x", pady=(10, 0))
+        add_frame.pack(fill="x", pady=(0, 10))
 
         self.new_person_entry = ttk.Entry(add_frame)
-        self.new_person_entry.pack(side="left", fill="x", expand=True)
+        self.new_person_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
 
-        ttk.Button(add_frame, text="Add Person", 
-                   command=self.add_new_person).pack(side="right", padx=(5, 0))
+        add_button = ttk.Button(add_frame, text="Add Person", 
+                              command=self.add_new_person, style='Accent.TButton')
+        add_button.pack(side="right")
+
+        # People listbox with scrollbar
+        listbox_frame = ttk.Frame(left_frame)
+        listbox_frame.pack(fill="both", expand=True)
+
+        self.people_listbox = tk.Listbox(listbox_frame, height=15, font=('Arial', 10))
+        scrollbar = ttk.Scrollbar(listbox_frame, orient="vertical", command=self.people_listbox.yview)
+        self.people_listbox.configure(yscrollcommand=scrollbar.set)
+
+        self.people_listbox.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
 
         # Right frame contents - Information Display
-        ttk.Label(right_frame, text="Previous Entries:").pack(anchor="w")
-        self.info_display = tk.Text(right_frame, height=20, state='disabled')
-        self.info_display.pack(fill="both", expand=True)
+        info_label = ttk.Label(right_frame, text="Previous Entries:", font=('Arial', 12, 'bold'))
+        info_label.pack(anchor="w", pady=(0, 5))
+
+        # Add scrollbar to info display
+        info_frame = ttk.Frame(right_frame)
+        info_frame.pack(fill="both", expand=True)
+
+        self.info_display = tk.Text(info_frame, height=20, state='disabled', font=('Arial', 10))
+        info_scrollbar = ttk.Scrollbar(info_frame, orient="vertical", command=self.info_display.yview)
+        self.info_display.configure(yscrollcommand=info_scrollbar.set)
+
+        self.info_display.pack(side="left", fill="both", expand=True)
+        info_scrollbar.pack(side="right", fill="y")
 
     def refresh_people_list(self):
         self.people_listbox.delete(0, tk.END)
