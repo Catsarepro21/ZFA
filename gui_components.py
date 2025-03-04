@@ -3,6 +3,50 @@ from tkinter import ttk, messagebox
 from data_manager import DataManager
 from utils import validate_input
 
+class PasswordDialog(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Enter Password")
+        self.geometry("300x150")
+        self.resizable(False, False)
+
+        # Make dialog modal
+        self.transient(parent)
+        self.grab_set()
+
+        # Center the dialog
+        self.center_on_parent()
+
+        # Add password entry
+        main_frame = ttk.Frame(self, padding="20")
+        main_frame.pack(fill="both", expand=True)
+
+        ttk.Label(main_frame, text="Password:", font=('Arial', 10)).pack(pady=(0, 10))
+        self.password_entry = ttk.Entry(main_frame, show="*")
+        self.password_entry.pack(fill="x", pady=(0, 20))
+
+        # Buttons
+        ttk.Button(main_frame, text="Submit", command=self.submit).pack(side="left", padx=10)
+        ttk.Button(main_frame, text="Cancel", command=self.cancel).pack(side="right", padx=10)
+
+        # Set focus to password entry
+        self.password_entry.focus_set()
+
+    def center_on_parent(self):
+        self.update_idletasks()
+        parent = self.master
+        x = parent.winfo_x() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
+
+    def submit(self):
+        self.result = self.password_entry.get()
+        self.destroy()
+
+    def cancel(self):
+        self.result = None
+        self.destroy()
+
 class InfoDialog(tk.Toplevel):
     def __init__(self, parent, person_name):
         super().__init__(parent)
@@ -68,6 +112,7 @@ class MainApplication(ttk.Frame):
         ttk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.data_manager = DataManager()
+        self.ADMIN_PASSWORD = "admin123"  # In a real app, this should be stored securely
 
         self.create_widgets()
         self.refresh_people_list()
@@ -108,20 +153,31 @@ class MainApplication(ttk.Frame):
 
         self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
 
-        # Right frame contents - Information Display
-        info_label = ttk.Label(right_frame, text="Previous Entries:", font=('Arial', 12, 'bold'))
+        # Right frame contents - Information Display with TreeView
+        info_label = ttk.Label(right_frame, text="Previous Entries (Password Protected):", font=('Arial', 12, 'bold'))
         info_label.pack(anchor="w", pady=(0, 5))
 
-        # Add scrollbar to info display
-        info_frame = ttk.Frame(right_frame)
-        info_frame.pack(fill="both", expand=True)
+        # Create Treeview for spreadsheet-like display
+        self.tree = ttk.Treeview(right_frame, columns=('Time', 'Location', 'Event', 'Hours'), show='headings')
 
-        self.info_display = tk.Text(info_frame, height=20, state='disabled', font=('Arial', 10))
-        info_scrollbar = ttk.Scrollbar(info_frame, orient="vertical", command=self.info_display.yview)
-        self.info_display.configure(yscrollcommand=info_scrollbar.set)
+        # Define column headings
+        self.tree.heading('Time', text='Time')
+        self.tree.heading('Location', text='Location')
+        self.tree.heading('Event', text='Event')
+        self.tree.heading('Hours', text='Hours')
 
-        self.info_display.pack(side="left", fill="both", expand=True)
-        info_scrollbar.pack(side="right", fill="y")
+        # Configure column widths
+        self.tree.column('Time', width=150)
+        self.tree.column('Location', width=150)
+        self.tree.column('Event', width=150)
+        self.tree.column('Hours', width=100)
+
+        # Add scrollbar to treeview
+        tree_scroll = ttk.Scrollbar(right_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=tree_scroll.set)
+
+        self.tree.pack(side="left", fill="both", expand=True)
+        tree_scroll.pack(side="right", fill="y")
 
     def refresh_people_list(self):
         self.people_listbox.delete(0, tk.END)
@@ -166,17 +222,28 @@ class MainApplication(ttk.Frame):
             else:
                 messagebox.showerror("Error", message)
 
+    def verify_password(self):
+        dialog = PasswordDialog(self)
+        self.wait_window(dialog)
+        if hasattr(dialog, 'result') and dialog.result == self.ADMIN_PASSWORD:
+            return True
+        return False
+
     def display_person_info(self, name):
+        if not self.verify_password():
+            messagebox.showerror("Error", "Incorrect password!")
+            return
+
+        # Clear existing items
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        # Get and display the records
         info_records = self.data_manager.get_person_info(name)
-
-        self.info_display.config(state='normal')
-        self.info_display.delete(1.0, tk.END)
-
         for record in info_records:
-            entry = f"[{record['Timestamp']}]\n"
-            entry += f"Location: {record['Location']}\n"
-            entry += f"Event: {record['Event']}\n"
-            entry += f"Hours: {record['Hours']}\n\n"
-            self.info_display.insert(tk.END, entry)
-
-        self.info_display.config(state='disabled')
+            self.tree.insert('', 'end', values=(
+                record['Timestamp'],
+                record['Location'],
+                record['Event'],
+                record['Hours']
+            ))
