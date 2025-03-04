@@ -153,7 +153,7 @@ class MainApplication(ttk.Frame):
         self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
 
         # Add view entries button
-        view_button = ttk.Button(self.left_frame, text="View Previous Entries", 
+        view_button = ttk.Button(self.left_frame, text="View All Entries", 
                                command=self.toggle_entries_view, width=20)
         view_button.pack(side="bottom", pady=10)
 
@@ -188,6 +188,7 @@ class MainApplication(ttk.Frame):
         # Initially hide the entries frame and right frame
         self.entries_frame.pack_forget()
         # Don't pack the right frame initially
+
 
     def toggle_entries_view(self):
         if not self.verify_password():
