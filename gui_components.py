@@ -9,33 +9,47 @@ class InfoDialog(tk.Toplevel):
         self.title(f"Enter Information for {person_name}")
         self.person_name = person_name
 
-        # Make dialog modal
+        # Set up the dialog
+        self.geometry("400x250")
+        self.resizable(False, False)
+
+        # Ensure the dialog appears on top
         self.transient(parent)
-        self.grab_set()
+        self.focus_set()
 
-        # Create form fields
-        ttk.Label(self, text="Location:").grid(row=0, column=0, pady=5, padx=5, sticky="w")
-        self.location_entry = ttk.Entry(self, width=30)
-        self.location_entry.grid(row=0, column=1, pady=5, padx=5)
+        # Add some padding and a main frame
+        main_frame = ttk.Frame(self, padding="20")
+        main_frame.pack(fill="both", expand=True)
 
-        ttk.Label(self, text="Event:").grid(row=1, column=0, pady=5, padx=5, sticky="w")
-        self.event_entry = ttk.Entry(self, width=30)
-        self.event_entry.grid(row=1, column=1, pady=5, padx=5)
+        # Create form fields with better spacing and labels
+        ttk.Label(main_frame, text="Location:", font=('Arial', 10)).grid(row=0, column=0, pady=10, padx=5, sticky="w")
+        self.location_entry = ttk.Entry(main_frame, width=30)
+        self.location_entry.grid(row=0, column=1, pady=10, padx=5)
 
-        ttk.Label(self, text="Hours:").grid(row=2, column=0, pady=5, padx=5, sticky="w")
-        self.hours_entry = ttk.Entry(self, width=30)
-        self.hours_entry.grid(row=2, column=1, pady=5, padx=5)
+        ttk.Label(main_frame, text="Event:", font=('Arial', 10)).grid(row=1, column=0, pady=10, padx=5, sticky="w")
+        self.event_entry = ttk.Entry(main_frame, width=30)
+        self.event_entry.grid(row=1, column=1, pady=10, padx=5)
+
+        ttk.Label(main_frame, text="Hours:", font=('Arial', 10)).grid(row=2, column=0, pady=10, padx=5, sticky="w")
+        self.hours_entry = ttk.Entry(main_frame, width=30)
+        self.hours_entry.grid(row=2, column=1, pady=10, padx=5)
 
         # Buttons
-        button_frame = ttk.Frame(self)
-        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=20)
 
-        ttk.Button(button_frame, text="Save", command=self.save).pack(side="left", padx=5)
-        ttk.Button(button_frame, text="Cancel", command=self.cancel).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Save", command=self.save, width=10).pack(side="left", padx=10)
+        ttk.Button(button_frame, text="Cancel", command=self.cancel, width=10).pack(side="left", padx=10)
 
-        # Center the dialog
-        self.geometry("300x200")
-        self.resizable(False, False)
+        # Center the dialog on the parent window
+        self.center_on_parent()
+
+    def center_on_parent(self):
+        self.update_idletasks()
+        parent = self.master
+        x = parent.winfo_x() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
 
     def save(self):
         self.result = {
