@@ -119,18 +119,17 @@ class MainApplication(ttk.Frame):
 
     def create_widgets(self):
         # Create main containers
-        left_frame = ttk.Frame(self, relief="solid", borderwidth=1)
-        right_frame = ttk.Frame(self, relief="solid", borderwidth=1)
+        self.left_frame = ttk.Frame(self, relief="solid", borderwidth=1)
+        self.right_frame = ttk.Frame(self, relief="solid", borderwidth=1)
 
-        left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
-        right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        self.left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
         # Left frame contents - People List
-        list_label = ttk.Label(left_frame, text="People List", font=('Arial', 12, 'bold'))
+        list_label = ttk.Label(self.left_frame, text="People List", font=('Arial', 12, 'bold'))
         list_label.pack(anchor="w", pady=(0, 5))
 
         # Add new person section at the top
-        add_frame = ttk.Frame(left_frame)
+        add_frame = ttk.Frame(self.left_frame)
         add_frame.pack(fill="x", pady=(0, 10))
 
         self.new_person_entry = ttk.Entry(add_frame)
@@ -141,7 +140,7 @@ class MainApplication(ttk.Frame):
         add_button.pack(side="right")
 
         # People listbox with scrollbar
-        listbox_frame = ttk.Frame(left_frame)
+        listbox_frame = ttk.Frame(self.left_frame)
         listbox_frame.pack(fill="both", expand=True)
 
         self.people_listbox = tk.Listbox(listbox_frame, height=15, font=('Arial', 10))
@@ -154,12 +153,12 @@ class MainApplication(ttk.Frame):
         self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
 
         # Add view entries button
-        view_button = ttk.Button(left_frame, text="View Previous Entries", 
+        view_button = ttk.Button(self.left_frame, text="View Previous Entries", 
                                command=self.toggle_entries_view, width=20)
         view_button.pack(side="bottom", pady=10)
 
         # Right frame contents - Information Display with TreeView
-        self.entries_frame = ttk.Frame(right_frame)
+        self.entries_frame = ttk.Frame(self.right_frame)
 
         info_label = ttk.Label(self.entries_frame, text="Previous Entries", font=('Arial', 12, 'bold'))
         info_label.pack(anchor="w", pady=(0, 5))
@@ -186,8 +185,9 @@ class MainApplication(ttk.Frame):
         self.tree.pack(side="left", fill="both", expand=True)
         tree_scroll.pack(side="right", fill="y")
 
-        # Initially hide the entries frame
+        # Initially hide the entries frame and right frame
         self.entries_frame.pack_forget()
+        # Don't pack the right frame initially
 
     def toggle_entries_view(self):
         if not self.verify_password():
@@ -196,7 +196,10 @@ class MainApplication(ttk.Frame):
 
         if self.entries_frame.winfo_ismapped():
             self.entries_frame.pack_forget()
+            self.right_frame.pack_forget()
+            self.left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
         else:
+            self.right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
             self.entries_frame.pack(fill="both", expand=True)
             if self.people_listbox.curselection():
                 selected_person = self.people_listbox.get(self.people_listbox.curselection())
