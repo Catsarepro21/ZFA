@@ -153,12 +153,19 @@ class MainApplication(ttk.Frame):
 
         self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
 
+        # Add view entries button
+        view_button = ttk.Button(left_frame, text="View Previous Entries", 
+                               command=self.toggle_entries_view, width=20)
+        view_button.pack(side="bottom", pady=10)
+
         # Right frame contents - Information Display with TreeView
-        info_label = ttk.Label(right_frame, text="Previous Entries (Password Protected):", font=('Arial', 12, 'bold'))
+        self.entries_frame = ttk.Frame(right_frame)
+
+        info_label = ttk.Label(self.entries_frame, text="Previous Entries", font=('Arial', 12, 'bold'))
         info_label.pack(anchor="w", pady=(0, 5))
 
         # Create Treeview for spreadsheet-like display
-        self.tree = ttk.Treeview(right_frame, columns=('Time', 'Location', 'Event', 'Hours'), show='headings')
+        self.tree = ttk.Treeview(self.entries_frame, columns=('Time', 'Location', 'Event', 'Hours'), show='headings')
 
         # Define column headings
         self.tree.heading('Time', text='Time')
@@ -173,11 +180,27 @@ class MainApplication(ttk.Frame):
         self.tree.column('Hours', width=100)
 
         # Add scrollbar to treeview
-        tree_scroll = ttk.Scrollbar(right_frame, orient="vertical", command=self.tree.yview)
+        tree_scroll = ttk.Scrollbar(self.entries_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=tree_scroll.set)
 
         self.tree.pack(side="left", fill="both", expand=True)
         tree_scroll.pack(side="right", fill="y")
+
+        # Initially hide the entries frame
+        self.entries_frame.pack_forget()
+
+    def toggle_entries_view(self):
+        if not self.verify_password():
+            messagebox.showerror("Error", "Incorrect password!")
+            return
+
+        if self.entries_frame.winfo_ismapped():
+            self.entries_frame.pack_forget()
+        else:
+            self.entries_frame.pack(fill="both", expand=True)
+            if self.people_listbox.curselection():
+                selected_person = self.people_listbox.get(self.people_listbox.curselection())
+                self.display_person_info(selected_person)
 
     def refresh_people_list(self):
         self.people_listbox.delete(0, tk.END)
@@ -217,7 +240,8 @@ class MainApplication(ttk.Frame):
                 dialog.result['hours']
             )
             if success:
-                self.display_person_info(name)
+                if self.entries_frame.winfo_ismapped():
+                    self.display_person_info(name)
                 messagebox.showinfo("Success", message)
             else:
                 messagebox.showerror("Error", message)
@@ -230,10 +254,6 @@ class MainApplication(ttk.Frame):
         return False
 
     def display_person_info(self, name):
-        if not self.verify_password():
-            messagebox.showerror("Error", "Incorrect password!")
-            return
-
         # Clear existing items
         for item in self.tree.get_children():
             self.tree.delete(item)
