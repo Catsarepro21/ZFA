@@ -154,7 +154,7 @@ class MainApplication(ttk.Frame):
         self.people_listbox.bind('<Double-Button-1>', self.on_double_click)
 
         # Add view entries button
-        view_button = ttk.Button(left_frame, text="View Previous Entries", 
+        view_button = ttk.Button(left_frame, text="View All Entries", 
                                command=self.toggle_entries_view, width=20)
         view_button.pack(side="bottom", pady=10)
 
