@@ -4,10 +4,10 @@ from data_manager import DataManager
 from utils import validate_input
 
 class PasswordDialog(tk.Toplevel):
-    def __init__(self, parent):
+    def __init__(self, parent, change_password=False):
         super().__init__(parent)
-        self.title("Enter Password")
-        self.geometry("300x150")
+        self.title("Change Password" if change_password else "Enter Password")
+        self.geometry("300x250" if change_password else "300x150")
         self.resizable(False, False)
 
         # Make dialog modal
@@ -21,16 +21,31 @@ class PasswordDialog(tk.Toplevel):
         main_frame = ttk.Frame(self, padding="20")
         main_frame.pack(fill="both", expand=True)
 
-        ttk.Label(main_frame, text="Password:", font=('Arial', 10)).pack(pady=(0, 10))
-        self.password_entry = ttk.Entry(main_frame, show="*")
-        self.password_entry.pack(fill="x", pady=(0, 20))
+        if change_password:
+            ttk.Label(main_frame, text="Current Password:", font=('Arial', 10)).pack(pady=(0, 5))
+            self.current_password = ttk.Entry(main_frame, show="*")
+            self.current_password.pack(fill="x", pady=(0, 10))
+
+            ttk.Label(main_frame, text="New Password:", font=('Arial', 10)).pack(pady=(0, 5))
+            self.new_password = ttk.Entry(main_frame, show="*")
+            self.new_password.pack(fill="x", pady=(0, 10))
+
+            ttk.Label(main_frame, text="Confirm Password:", font=('Arial', 10)).pack(pady=(0, 5))
+            self.confirm_password = ttk.Entry(main_frame, show="*")
+            self.confirm_password.pack(fill="x", pady=(0, 10))
+
+            # Set focus to current password entry
+            self.current_password.focus_set()
+        else:
+            ttk.Label(main_frame, text="Password:", font=('Arial', 10)).pack(pady=(0, 10))
+            self.password_entry = ttk.Entry(main_frame, show="*")
+            self.password_entry.pack(fill="x", pady=(0, 20))
+            # Set focus to password entry
+            self.password_entry.focus_set()
 
         # Buttons
         ttk.Button(main_frame, text="Submit", command=self.submit).pack(side="left", padx=10)
         ttk.Button(main_frame, text="Cancel", command=self.cancel).pack(side="right", padx=10)
-
-        # Set focus to password entry
-        self.password_entry.focus_set()
 
     def center_on_parent(self):
         self.update_idletasks()
@@ -40,7 +55,16 @@ class PasswordDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def submit(self):
-        self.result = self.password_entry.get()
+        if hasattr(self, 'password_entry'):
+            self.result = self.password_entry.get()
+        else:
+            if self.new_password.get() != self.confirm_password.get():
+                messagebox.showerror("Error", "New passwords do not match!")
+                return
+            self.result = {
+                'current': self.current_password.get(),
+                'new': self.new_password.get()
+            }
         self.destroy()
 
     def cancel(self):
@@ -163,6 +187,16 @@ class MainApplication(ttk.Frame):
         info_label = ttk.Label(self.entries_frame, text="Previous Entries", font=('Arial', 12, 'bold'))
         info_label.pack(anchor="w", pady=(0, 5))
 
+        # Add buttons frame in entries view
+        self.buttons_frame = ttk.Frame(self.entries_frame)
+        self.buttons_frame.pack(fill="x", pady=(10, 0))
+
+        # Add change password button
+        change_password_button = ttk.Button(self.buttons_frame, text="Change Password", 
+                                          command=self.change_password, width=15)
+        change_password_button.pack(side="left", padx=5)
+
+
         # Create Treeview for spreadsheet-like display
         self.tree = ttk.Treeview(self.entries_frame, columns=('Time', 'Location', 'Event', 'Hours'), show='headings')
 
@@ -271,3 +305,13 @@ class MainApplication(ttk.Frame):
                 record['Event'],
                 record['Hours']
             ))
+
+    def change_password(self):
+        dialog = PasswordDialog(self, change_password=True)
+        self.wait_window(dialog)
+        if hasattr(dialog, 'result') and dialog.result:
+            if dialog.result['current'] == self.ADMIN_PASSWORD:
+                self.ADMIN_PASSWORD = dialog.result['new']
+                messagebox.showinfo("Success", "Password changed successfully!")
+            else:
+                messagebox.showerror("Error", "Current password is incorrect!")
