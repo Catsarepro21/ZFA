@@ -152,11 +152,16 @@ class MainApplication(ttk.Frame):
         list_label = ttk.Label(self.left_frame, text="People List", font=('Arial', 12, 'bold'))
         list_label.pack(anchor="w", pady=(0, 5))
 
-        # Add new person section at the top
-        add_frame = ttk.Frame(self.left_frame)
-        add_frame.pack(fill="x", pady=(0, 10))
+        # Don't See Your Name button
+        self.show_add_button = ttk.Button(self.left_frame, text="Don't See Your Name?", 
+                                         command=self.toggle_add_person_form)
+        self.show_add_button.pack(fill="x", pady=(0, 10))
 
-        self.new_person_entry = ttk.Entry(add_frame)
+        # Add new person section - initially hidden
+        self.add_frame = ttk.Frame(self.left_frame)
+        # Don't pack the frame initially to hide it
+        
+        self.new_person_entry = ttk.Entry(self.add_frame)
         self.new_person_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
         
         # Add placeholder text
@@ -168,7 +173,7 @@ class MainApplication(ttk.Frame):
         self.new_person_entry.bind("<FocusIn>", self.on_entry_focus_in)
         self.new_person_entry.bind("<FocusOut>", self.on_entry_focus_out)
 
-        add_button = ttk.Button(add_frame, text="Add Person", 
+        add_button = ttk.Button(self.add_frame, text="Add Person", 
                               command=self.add_new_person, style='Accent.TButton')
         add_button.pack(side="right")
 
@@ -261,6 +266,15 @@ class MainApplication(ttk.Frame):
         self.entries_frame.pack_forget()
         self.right_frame.pack_forget()
         self.left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+    
+    def toggle_add_person_form(self):
+        if self.add_frame.winfo_ismapped():
+            self.add_frame.pack_forget()
+            self.show_add_button.configure(text="Don't See Your Name?")
+        else:
+            self.add_frame.pack(fill="x", pady=(0, 10))
+            self.show_add_button.configure(text="Hide Add Person")
+            self.new_person_entry.focus_set()
         
     def export_entries(self):
         from tkinter import filedialog, simpledialog
@@ -358,6 +372,8 @@ class MainApplication(ttk.Frame):
             self.new_person_entry.delete(0, tk.END)
             self.refresh_people_list()
             messagebox.showinfo("Success", message)
+            # Hide the add person form after successful addition
+            self.toggle_add_person_form()
         else:
             messagebox.showerror("Error", message)
 
