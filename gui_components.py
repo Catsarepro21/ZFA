@@ -196,6 +196,11 @@ class MainApplication(ttk.Frame):
                                           command=self.change_password, width=15)
         change_password_button.pack(side="left", padx=5)
         
+        # Add export button
+        export_button = ttk.Button(self.buttons_frame, text="Export", 
+                                 command=self.export_entries, width=10)
+        export_button.pack(side="right", padx=5)
+        
         # Add close button
         close_button = ttk.Button(self.buttons_frame, text="Close", 
                                 command=self.close_entries_view, width=10)
@@ -247,6 +252,72 @@ class MainApplication(ttk.Frame):
         self.entries_frame.pack_forget()
         self.right_frame.pack_forget()
         self.left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+        
+    def export_entries(self):
+        from tkinter import filedialog, simpledialog
+        import csv
+        
+        # Ask if user wants to export all entries or just selected person
+        has_selection = bool(self.people_listbox.curselection())
+        
+        if has_selection:
+            selected_person = self.people_listbox.get(self.people_listbox.curselection())
+            options = ["Selected Person", "All Entries"]
+            choice = simpledialog.askstring(
+                "Export Options", 
+                f"Export entries for {selected_person} or all entries?",
+                initialvalue="Selected Person"
+            )
+            
+            if not choice:  # User canceled
+                return
+                
+            export_all = (choice.lower() == "all entries")
+        else:
+            export_all = True
+        
+        # Get the records
+        if export_all:
+            records = self.data_manager.get_all_entries()
+            if not records:
+                messagebox.showinfo("Information", "No records to export")
+                return
+            export_title = "All Entries"
+        else:
+            records = self.data_manager.get_person_info(selected_person)
+            if not records:
+                messagebox.showinfo("Information", "No records to export for this person")
+                return
+            export_title = f"Entries for {selected_person}"
+            
+        # Ask user for file location
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+            title=f"Export {export_title}"
+        )
+        
+        if not filename:  # If user cancels the save dialog
+            return
+            
+        try:
+            with open(filename, 'w', newline='') as csvfile:
+                if export_all:
+                    fieldnames = ['Name', 'Timestamp', 'Location', 'Event', 'Hours']
+                else:
+                    fieldnames = ['Timestamp', 'Location', 'Event', 'Hours']
+                    
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                
+                writer.writeheader()
+                for record in records:
+                    # Only write the specified fields
+                    filtered_record = {k: record[k] for k in fieldnames if k in record}
+                    writer.writerow(filtered_record)
+                    
+            messagebox.showinfo("Success", f"{export_title} exported to {filename}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to export: {str(e)}")
 
     def refresh_people_list(self):
         self.people_listbox.delete(0, tk.END)

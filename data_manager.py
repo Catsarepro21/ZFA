@@ -57,3 +57,8 @@ class DataManager:
         df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
         df.to_csv(self.file_path, index=False)
         return True, "Person added successfully!"
+        
+    def get_all_entries(self):
+        """Get all entries in the database"""
+        df = pd.read_csv(self.file_path)
+        return df.to_dict('records')
