@@ -15,13 +15,32 @@ class DataManager:
 
     def get_all_people(self):
         df = pd.read_csv(self.file_path)
-        return sorted(df['Name'].unique())
+        # Convert all names to lowercase for comparison, then use unique with case preservation
+        unique_names = []
+        seen_lower = set()
+        
+        for name in df['Name']:
+            if name.lower() not in seen_lower:
+                seen_lower.add(name.lower())
+                unique_names.append(name)
+                
+        # Sort alphabetically (case-insensitive)
+        return sorted(unique_names, key=lambda x: x.lower())
 
     def add_person_info(self, name, location, event, hours):
         try:
             df = pd.read_csv(self.file_path)
+            
+            # Check if name exists (case-insensitive), use the original case if found
+            matching_names = df[df['Name'].str.lower() == name.lower()]['Name'].unique()
+            if len(matching_names) > 0:
+                # Use the first instance we found to maintain case consistency
+                name_to_use = matching_names[0]
+            else:
+                name_to_use = name
+                
             new_data = {
-                'Name': [name],
+                'Name': [name_to_use],
                 'Location': [location],
                 'Event': [event],
                 'Hours': [hours],
@@ -35,7 +54,8 @@ class DataManager:
 
     def get_person_info(self, name):
         df = pd.read_csv(self.file_path)
-        person_data = df[df['Name'] == name]
+        # Case-insensitive match
+        person_data = df[df['Name'].str.lower() == name.lower()]
         return person_data.to_dict('records')
 
     def add_new_person(self, name):
@@ -43,8 +63,9 @@ class DataManager:
             return False, "Name cannot be empty!"
 
         df = pd.read_csv(self.file_path)
-        if name in df['Name'].unique():
-            return False, "Person already exists!"
+        # Case-insensitive check for duplicates
+        if any(existing_name.lower() == name.lower() for existing_name in df['Name'].unique()):
+            return False, "Person already exists (name is case-insensitive)!"
 
         # Add the person with initial empty information
         new_data = {
