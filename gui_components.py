@@ -158,6 +158,15 @@ class MainApplication(ttk.Frame):
 
         self.new_person_entry = ttk.Entry(add_frame)
         self.new_person_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        
+        # Add placeholder text
+        self.placeholder_text = "First and Last name"
+        self.new_person_entry.insert(0, self.placeholder_text)
+        self.new_person_entry.configure(foreground='gray')
+        
+        # Bind focus events to handle placeholder behavior
+        self.new_person_entry.bind("<FocusIn>", self.on_entry_focus_in)
+        self.new_person_entry.bind("<FocusOut>", self.on_entry_focus_out)
 
         add_button = ttk.Button(add_frame, text="Add Person", 
                               command=self.add_new_person, style='Accent.TButton')
@@ -325,9 +334,22 @@ class MainApplication(ttk.Frame):
         for person in people:
             self.people_listbox.insert(tk.END, person)
 
+    def on_entry_focus_in(self, event):
+        """Remove placeholder text when entry gets focus"""
+        if self.new_person_entry.get() == self.placeholder_text:
+            self.new_person_entry.delete(0, tk.END)
+            self.new_person_entry.configure(foreground='black')
+            
+    def on_entry_focus_out(self, event):
+        """Add placeholder text if entry is empty and loses focus"""
+        if not self.new_person_entry.get():
+            self.new_person_entry.insert(0, self.placeholder_text)
+            self.new_person_entry.configure(foreground='gray')
+            
     def add_new_person(self):
         name = self.new_person_entry.get().strip()
-        if not name:
+        # Check if text is placeholder or empty
+        if not name or name == self.placeholder_text:
             messagebox.showerror("Error", "Please enter a name!")
             return
 
