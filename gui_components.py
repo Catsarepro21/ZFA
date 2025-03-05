@@ -195,6 +195,11 @@ class MainApplication(ttk.Frame):
         change_password_button = ttk.Button(self.buttons_frame, text="Change Password", 
                                           command=self.change_password, width=15)
         change_password_button.pack(side="left", padx=5)
+        
+        # Add close button
+        close_button = ttk.Button(self.buttons_frame, text="Close", 
+                                command=self.close_entries_view, width=10)
+        close_button.pack(side="right", padx=5)
 
 
         # Create Treeview for spreadsheet-like display
@@ -230,15 +235,18 @@ class MainApplication(ttk.Frame):
             return
 
         if self.entries_frame.winfo_ismapped():
-            self.entries_frame.pack_forget()
-            self.right_frame.pack_forget()
-            self.left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+            self.close_entries_view()
         else:
             self.right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
             self.entries_frame.pack(fill="both", expand=True)
             if self.people_listbox.curselection():
                 selected_person = self.people_listbox.get(self.people_listbox.curselection())
                 self.display_person_info(selected_person)
+                
+    def close_entries_view(self):
+        self.entries_frame.pack_forget()
+        self.right_frame.pack_forget()
+        self.left_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
     def refresh_people_list(self):
         self.people_listbox.delete(0, tk.END)
