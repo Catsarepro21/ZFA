@@ -3,7 +3,7 @@ from gui_components import MainApplication
 
 def main():
     root = tk.Tk()
-    root.title("Personal Information Manager")
+    root.title("ZF Volunteer Hours")
     # Set a reasonable default size for the application
     root.geometry("800x600")
     # Make the window resizable
