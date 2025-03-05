@@ -318,15 +318,24 @@ class MainApplication(ttk.Frame):
                 return
             export_title = f"Entries for {selected_person}"
             
-        # Ask user for file location
+        # Ask user for file location with a default filename
+        default_filename = f"exported_{export_title.replace(' ', '_')}.csv"
         filename = filedialog.asksaveasfilename(
             defaultextension=".csv",
             filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-            title=f"Export {export_title}"
+            title=f"Export {export_title}",
+            initialfile=default_filename
         )
         
         if not filename:  # If user cancels the save dialog
             return
+            
+        # Show message about file location
+        messagebox.showinfo("Export Complete", 
+            f"File saved as: {filename}\n\n" +
+            "To download this file from Replit to your computer:\n" +
+            "1. Look for the file in the Files panel (left side)\n" +
+            "2. Right-click on the file and select 'Download'")
             
         try:
             with open(filename, 'w', newline='') as csvfile:
