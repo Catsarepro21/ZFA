@@ -222,15 +222,17 @@ class MainApplication(ttk.Frame):
 
 
         # Create Treeview for spreadsheet-like display
-        self.tree = ttk.Treeview(self.entries_frame, columns=('Time', 'Location', 'Event', 'Hours'), show='headings')
+        self.tree = ttk.Treeview(self.entries_frame, columns=('Name', 'Time', 'Location', 'Event', 'Hours'), show='headings')
 
         # Define column headings
+        self.tree.heading('Name', text='Name')
         self.tree.heading('Time', text='Time')
         self.tree.heading('Location', text='Location')
         self.tree.heading('Event', text='Event')
         self.tree.heading('Hours', text='Hours')
 
         # Configure column widths
+        self.tree.column('Name', width=150)
         self.tree.column('Time', width=150)
         self.tree.column('Location', width=150)
         self.tree.column('Event', width=150)
@@ -261,6 +263,9 @@ class MainApplication(ttk.Frame):
             if self.people_listbox.curselection():
                 selected_person = self.people_listbox.get(self.people_listbox.curselection())
                 self.display_person_info(selected_person)
+            else:
+                # If no person is selected, show all entries
+                self.display_all_entries()
                 
     def close_entries_view(self):
         self.entries_frame.pack_forget()
@@ -415,8 +420,11 @@ class MainApplication(ttk.Frame):
 
         # Get and display the records
         info_records = self.data_manager.get_person_info(name)
+        # Sort records by name (case-insensitive)
+        info_records = sorted(info_records, key=lambda x: x['Name'].lower())
         for record in info_records:
             self.tree.insert('', 'end', values=(
+                record['Name'],
                 record['Timestamp'],
                 record['Location'],
                 record['Event'],
@@ -432,3 +440,22 @@ class MainApplication(ttk.Frame):
                 messagebox.showinfo("Success", "Password changed successfully!")
             else:
                 messagebox.showerror("Error", "Current password is incorrect!")
+                
+    def display_all_entries(self):
+        """Display all entries sorted by name"""
+        # Clear existing items
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        # Get all records and sort them by name
+        all_records = self.data_manager.get_all_entries()
+        all_records = sorted(all_records, key=lambda x: x['Name'].lower())
+        
+        for record in all_records:
+            self.tree.insert('', 'end', values=(
+                record['Name'],
+                record['Timestamp'],
+                record['Location'],
+                record['Event'],
+                record['Hours']
+            ))
